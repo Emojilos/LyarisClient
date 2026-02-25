@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/emoji/Documents/LyarisClient show 4d4298b:README.md)",
+      "Bash(git -C /Users/emoji/Documents/LyarisClient status)",
+      "Bash(git -C /Users/emoji/Documents/LyarisClient log --name-status)",
+      "Bash(git -C /Users/emoji/Documents/LyarisClient show HEAD:ReadMe.md)",
+      "Bash(git -C /Users/emoji/Documents/LyarisClient branch -a)",
+      "Bash(git -C /Users/emoji/Documents/LyarisClient show b21a129:auth/cmd/main.go)",
+      "Bash(git -C /Users/emoji/Documents/LyarisClient show b21a129:auth/go.mod)",
+      "Bash(git -C /Users/emoji/Documents/LyarisClient show b21a129:auth/internal/config/config.go)",
+      "Bash(git -C /Users/emoji/Documents/LyarisClient log --oneline --all)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}

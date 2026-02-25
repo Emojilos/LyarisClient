@@ -1,5 +1,7 @@
 import type { Vec3 } from 'vec3';
 
+// ─── Mining ───
+
 export interface Area {
   corner1: Vec3;
   corner2: Vec3;
@@ -20,12 +22,56 @@ export interface MiningState {
   currentTool: string | null;
   botPosition: { x: number; y: number; z: number } | null;
   error: string | null;
+  health: number;
+  food: number;
+  ping: number;
+  tps: number;
 }
 
-export interface BotConfig {
-  host: string;
-  port: number;
+// ─── Network ───
+
+export interface PingData {
+  ping: number;
+  tps: number;
+  quality: 'good' | 'moderate' | 'poor' | 'critical';
+}
+
+// ─── Statistics ───
+
+export interface MiningStats {
+  sessionDuration: number;
+  totalBlocksMined: number;
+  blocksPerMinute: number;
+  estimatedTimeRemaining: number | null;
+}
+
+// ─── Chat ───
+
+export interface ChatMessage {
+  timestamp: number;
   username: string;
-  version: string;
-  viewerPort: number;
+  message: string;
+  isSystem: boolean;
+}
+
+// ─── Player ───
+
+export interface PlayerInfo {
+  name: string;
+  ping: number;
+}
+
+// ─── Inventory ───
+
+export interface SlotInfo {
+  name: string;
+  displayName: string;
+  count: number;
+}
+
+// ─── State file (persisted) ───
+
+export interface SavedMiningState {
+  area: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } };
+  minedBlocks: number;
 }

@@ -4,534 +4,593 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lyaris Control Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #111118;
+      --bg-card: #16161f;
+      --bg-input: #0d0d14;
+      --border: #1e1e2e;
+      --border-active: #00d4aa;
+      --text-primary: #e0e0e8;
+      --text-secondary: #888899;
+      --text-muted: #555566;
+      --accent: #00d4aa;
+      --accent-blue: #4a9eff;
+      --accent-orange: #f5a623;
+      --accent-red: #ff4a4a;
+      --accent-purple: #a78bfa;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0f0f0f;
-      color: #e0e0e0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
 
-    header {
-      background: #1a1a2e;
-      padding: 16px 24px;
-      border-bottom: 2px solid #16213e;
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 16px;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    header h1 {
-      font-size: 22px;
-      color: #00d4aa;
+    .header-left { display: flex; align-items: center; gap: 12px; }
+
+    .header h1 {
+      font-size: 18px;
       font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
     }
+
+    .ws-indicator {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent-red);
+      transition: background 0.3s;
+    }
+    .ws-indicator.connected { background: var(--accent); }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
+
+    .ping-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; font-weight: 600;
+      padding: 4px 10px; border-radius: 6px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .ping-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .ping-good { background: var(--accent); }
+    .ping-moderate { background: var(--accent-orange); }
+    .ping-poor { background: var(--accent-red); }
+    .ping-critical { background: var(--accent-red); animation: blink 1s infinite; }
+    @keyframes blink { 50% { opacity: 0.3; } }
 
     .status-badge {
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      text-transform: uppercase;
+      padding: 4px 12px; border-radius: 8px;
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .status-idle { background: #1a1a22; color: var(--text-muted); }
+    .status-mining { background: #0d2e22; color: var(--accent); }
+    .status-paused { background: #2e2a0d; color: var(--accent-orange); }
+    .status-finished { background: #0d1e2e; color: var(--accent-blue); }
+    .status-error { background: #2e0d0d; color: var(--accent-red); }
+    .status-traveling { background: #1a0d2e; color: var(--accent-purple); }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 0;
+      min-height: calc(100vh - 49px);
     }
 
-    .status-idle { background: #333; color: #888; }
-    .status-mining { background: #0d3320; color: #00d4aa; }
-    .status-paused { background: #3d2e0d; color: #f5a623; }
-    .status-finished { background: #0d2133; color: #4a9eff; }
-    .status-error { background: #330d0d; color: #ff4a4a; }
-    .status-traveling { background: #1a1040; color: #a78bfa; }
-
-    .main {
-      display: flex;
-      flex: 1;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 30px 20px;
+    .sidebar {
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      padding: 16px;
+      display: flex; flex-direction: column; gap: 12px;
       overflow-y: auto;
     }
 
-    .panel {
-      width: 100%;
-      max-width: 500px;
-      background: #141421;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      border: 1px solid #222;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    .main-content {
+      padding: 16px 20px;
+      display: flex; flex-direction: column; gap: 12px;
+      overflow-y: auto;
     }
 
-    .section {
-      background: #1a1a2e;
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 18px;
+      padding: 14px;
     }
 
-    .section h2 {
-      font-size: 14px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .card-title {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-muted); margin-bottom: 12px;
     }
 
-    .coord-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-    }
-
-    .coord-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .coord-group label {
-      font-size: 12px;
-      color: #666;
-      font-weight: 600;
-    }
-
-    .coord-row {
-      display: flex;
-      gap: 6px;
-    }
-
-    .coord-row input {
-      width: 100%;
-      padding: 8px;
-      background: #0f0f1a;
-      border: 1px solid #2a2a3e;
-      border-radius: 6px;
-      color: #e0e0e0;
-      font-size: 14px;
+    .bar-container { display: flex; flex-direction: column; gap: 8px; }
+    .bar-row { display: flex; align-items: center; gap: 8px; }
+    .bar-icon { font-size: 14px; width: 20px; text-align: center; }
+    .bar-track { flex: 1; height: 8px; background: var(--bg-input); border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .bar-fill.health { background: linear-gradient(90deg, var(--accent-red), #ff6b6b); }
+    .bar-fill.food { background: linear-gradient(90deg, var(--accent-orange), #ffc94a); }
+    .bar-value {
       font-family: 'JetBrains Mono', monospace;
-      text-align: center;
+      font-size: 12px; font-weight: 600;
+      color: var(--text-secondary); width: 32px; text-align: right;
     }
 
-    .coord-row input:focus {
-      outline: none;
-      border-color: #00d4aa;
-    }
+    .net-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .net-item { background: var(--bg-input); padding: 10px; border-radius: 6px; text-align: center; }
+    .net-value { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: var(--accent); }
+    .net-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; }
 
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-item { background: var(--bg-input); padding: 10px; border-radius: 6px; text-align: center; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--accent-blue); }
+    .stat-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+    .player-list { display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto; }
+    .player-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: var(--bg-input); border-radius: 4px; font-size: 13px; }
+    .player-ping { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+    .player-empty { color: var(--text-muted); font-size: 12px; text-align: center; padding: 8px; }
+
+    .chat-box { max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .chat-msg { padding: 3px 6px; border-radius: 3px; word-break: break-word; }
+    .chat-msg.system { color: var(--text-muted); font-style: italic; }
+    .chat-username { color: var(--accent-blue); font-weight: 600; }
+    .chat-input-row { display: flex; gap: 6px; margin-top: 8px; }
+    .chat-input { flex: 1; padding: 6px 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .chat-input:focus { outline: none; border-color: var(--accent); }
+    .chat-send { padding: 6px 12px; background: var(--accent); color: #000; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    .coord-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .coord-group label { font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 6px; }
+    .coord-row { display: flex; gap: 4px; }
+    .coord-row input { width: 100%; padding: 8px 6px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 14px; font-family: 'JetBrains Mono', monospace; text-align: center; }
+    .coord-row input:focus { outline: none; border-color: var(--accent); }
     .coord-row input[type="number"]::-webkit-outer-spin-button,
-    .coord-row input[type="number"]::-webkit-inner-spin-button {
-      -webkit-appearance: none; margin: 0;
-    }
+    .coord-row input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .coord-row input[type="number"] { -moz-appearance: textfield; }
+    .area-size { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); text-align: center; margin-top: 8px; }
 
-    .buttons { display: flex; gap: 8px; }
+    .btn-row { display: flex; gap: 6px; }
+    .btn { flex: 1; padding: 10px 14px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif; }
+    .btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+    .btn:active:not(:disabled) { transform: translateY(1px); }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-start { background: var(--accent); color: #000; }
+    .btn-pause { background: var(--accent-orange); color: #000; }
+    .btn-resume { background: var(--accent-blue); color: #fff; }
+    .btn-stop { background: var(--accent-red); color: #fff; }
+    .btn-base { background: var(--accent-purple); color: #fff; }
+    .btn-sleep { background: #3b82f6; color: #fff; }
 
-    button {
-      flex: 1;
-      padding: 12px 16px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
+    .progress-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .progress-stat { background: var(--bg-input); padding: 14px; border-radius: 8px; text-align: center; }
+    .progress-value { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; color: var(--accent); }
+    .progress-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .progress-bar { height: 10px; background: var(--bg-input); border-radius: 5px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-blue)); border-radius: 5px; transition: width 0.5s ease; }
+    .progress-pct { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+
+    .bot-info-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .bot-info-row:last-child { border-bottom: none; }
+    .bot-info-label { color: var(--text-muted); }
+    .bot-info-value { font-family: 'JetBrains Mono', monospace; color: var(--text-primary); background: var(--bg-input); padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+
+    .error-msg { color: var(--accent-red); font-size: 12px; padding: 8px 10px; background: rgba(255,74,74,0.08); border: 1px solid rgba(255,74,74,0.15); border-radius: 6px; margin-top: 8px; display: none; }
+
+    .hotbar { display: flex; gap: 4px; justify-content: center; }
+    .hotbar-slot { flex: 1; aspect-ratio: 1; max-width: 40px; background: var(--bg-input); border: 2px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+    .hotbar-slot.active { border-color: var(--accent); box-shadow: inset 0 0 8px rgba(0,212,170,0.15); }
+    .hotbar-slot-num { position: absolute; top: 1px; left: 3px; font-size: 8px; color: var(--text-muted); font-weight: bold; }
+    .hotbar-slot-name { color: var(--text-secondary); font-size: 7px; text-align: center; line-height: 1.1; word-break: break-all; padding: 0 1px; }
+    .hotbar-slot-count { position: absolute; bottom: 1px; right: 3px; font-size: 10px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
+
+    .log-viewer { max-height: 200px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-input); border-radius: 6px; padding: 8px; }
+    .log-entry { padding: 2px 0; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+    .log-time { color: var(--text-muted); }
+    .log-level-info { color: var(--accent-blue); }
+    .log-level-warn { color: var(--accent-orange); }
+    .log-level-error { color: var(--accent-red); }
+    .log-level-debug { color: var(--text-muted); }
+    .log-level-success { color: var(--accent); }
+    .log-module { color: #8b5cf6; }
+    .log-filters { display: flex; gap: 4px; margin-bottom: 8px; }
+    .log-filter { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; cursor: pointer; background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+    .log-filter.active { border-color: var(--accent); color: var(--accent); }
+
+    @media (max-width: 768px) {
+      .dashboard { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 40vh; }
     }
 
-    button:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
-    button:active:not(:disabled) { transform: translateY(1px); }
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    .btn-start { background: #00d4aa; color: #000; }
-    .btn-pause { background: #f5a623; color: #000; }
-    .btn-resume { background: #4a9eff; color: #fff; }
-    .btn-stop { background: #ff4a4a; color: #fff; }
-    .btn-goto-base { background: #a78bfa; color: #fff; }
-    .btn-sleep { background: #3b82f6; color: #fff; } /* Синий цвет для кнопки сна */
-
-    .stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .stat {
-      background: #0f0f1a;
-      padding: 16px 12px;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 26px;
-      font-weight: 700;
-      color: #00d4aa;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .stat-label { font-size: 12px; color: #666; margin-top: 6px; }
-
-    .progress-bar {
-      height: 8px;
-      background: #0f0f1a;
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 15px;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #00d4aa, #4a9eff);
-      border-radius: 4px;
-      transition: width 0.3s ease;
-    }
-
-    .bot-info {
-      font-size: 14px;
-      color: #888;
-      line-height: 2;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .bot-info span {
-      color: #e0e0e0;
-      font-family: 'JetBrains Mono', monospace;
-      background: #0f0f1a;
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-
-    .error-msg {
-      color: #ff4a4a;
-      font-size: 13px;
-      padding: 10px 12px;
-      background: rgba(255, 74, 74, 0.1);
-      border: 1px solid rgba(255, 74, 74, 0.2);
-      border-radius: 6px;
-      margin-top: 12px;
-      display: none;
-    }
-
-    .hotbar {
-      display: flex;
-      gap: 6px;
-      justify-content: center;
-      padding: 12px;
-      background: #0f0f1a;
-      border-radius: 8px;
-    }
-
-    .hotbar-slot {
-      flex: 1;
-      aspect-ratio: 1;
-      max-width: 45px;
-      background: #1a1a2e;
-      border: 2px solid #2a2a3e;
-      border-radius: 4px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .hotbar-slot.active {
-      border-color: #00d4aa;
-      background: #233535;
-      box-shadow: inset 0 0 8px rgba(0, 212, 170, 0.1);
-    }
-
-    .hotbar-slot-num {
-      position: absolute;
-      top: 2px;
-      left: 4px;
-      font-size: 9px;
-      color: #555;
-      font-weight: bold;
-    }
-
-    .hotbar-slot-name {
-      color: #aaa;
-      font-size: 8px;
-      text-align: center;
-      line-height: 1.1;
-      word-break: break-all;
-      padding: 0 2px;
-    }
-
-    .hotbar-slot-count {
-      position: absolute;
-      bottom: 2px;
-      right: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #fff;
-    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: #333; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Lyaris Control Panel</h1>
-    <div id="statusBadge" class="status-badge status-idle">idle</div>
+  <header class="header">
+    <div class="header-left">
+      <div class="ws-indicator" id="wsIndicator" title="WebSocket"></div>
+      <h1>Lyaris</h1>
+      <div class="status-badge status-idle" id="statusBadge">idle</div>
+    </div>
+    <div class="header-right">
+      <div class="ping-badge">
+        <div class="ping-dot ping-good" id="pingDot"></div>
+        <span id="pingValue">0ms</span>
+      </div>
+      <span style="font-size:12px;color:var(--text-muted)">TPS: <span id="tpsValue" style="font-family:'JetBrains Mono',monospace;color:var(--text-primary)">20.0</span></span>
+    </div>
   </header>
 
-  <div class="main">
-    <div class="panel">
-      <div class="section">
-        <h2>
-          Mining Area 
-          <span id="areaSize" style="color:#00d4aa;font-size:12px;font-weight:400;font-family:monospace;"></span>
-        </h2>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <div class="card">
+        <div class="card-title">Health & Food</div>
+        <div class="bar-container">
+          <div class="bar-row">
+            <span class="bar-icon" style="color:var(--accent-red)">&#9829;</span>
+            <div class="bar-track"><div class="bar-fill health" id="healthBar" style="width:100%"></div></div>
+            <span class="bar-value" id="healthValue">20</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-icon" style="color:var(--accent-orange)">&#9733;</span>
+            <div class="bar-track"><div class="bar-fill food" id="foodBar" style="width:100%"></div></div>
+            <span class="bar-value" id="foodValue">20</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Network</div>
+        <div class="net-grid">
+          <div class="net-item">
+            <div class="net-value" id="netPing">0</div>
+            <div class="net-label">Ping (ms)</div>
+          </div>
+          <div class="net-item">
+            <div class="net-value" id="netTps">20.0</div>
+            <div class="net-label">TPS</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="statBpm">0</div>
+            <div class="stat-label">Blocks/min</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statSession">0:00</div>
+            <div class="stat-label">Session</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Total Mined</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statEta">--</div>
+            <div class="stat-label">ETA</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Players Online <span id="playerCount" style="color:var(--accent);float:right">0</span></div>
+        <div class="player-list" id="playerList">
+          <div class="player-empty">No players</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Chat</div>
+        <div class="chat-box" id="chatBox"></div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" id="chatInput" placeholder="Send message..." maxlength="256">
+          <button class="chat-send" onclick="sendChat()">Send</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="card">
+        <div class="card-title">Mining Area</div>
         <div class="coord-grid">
           <div class="coord-group">
             <label>Corner 1</label>
             <div class="coord-row">
-              <input type="number" id="x1" placeholder="X" oninput="schedulePreview()">
-              <input type="number" id="y1" placeholder="Y" oninput="schedulePreview()">
-              <input type="number" id="z1" placeholder="Z" oninput="schedulePreview()">
+              <input type="number" id="x1" placeholder="X" oninput="updateAreaSize()">
+              <input type="number" id="y1" placeholder="Y" oninput="updateAreaSize()">
+              <input type="number" id="z1" placeholder="Z" oninput="updateAreaSize()">
             </div>
           </div>
           <div class="coord-group">
             <label>Corner 2</label>
             <div class="coord-row">
-              <input type="number" id="x2" placeholder="X" oninput="schedulePreview()">
-              <input type="number" id="y2" placeholder="Y" oninput="schedulePreview()">
-              <input type="number" id="z2" placeholder="Z" oninput="schedulePreview()">
+              <input type="number" id="x2" placeholder="X" oninput="updateAreaSize()">
+              <input type="number" id="y2" placeholder="Y" oninput="updateAreaSize()">
+              <input type="number" id="z2" placeholder="Z" oninput="updateAreaSize()">
             </div>
           </div>
         </div>
+        <div class="area-size" id="areaSize"></div>
       </div>
 
-      <div class="section">
-        <h2>Controls</h2>
-        <div class="buttons">
-          <button class="btn-start" id="btnStart" onclick="startMining()">Start</button>
-          <button class="btn-pause" id="btnPause" onclick="pauseMining()" disabled>Pause</button>
-          <button class="btn-stop" id="btnStop" onclick="stopMining()" disabled>Stop</button>
+      <div class="card">
+        <div class="card-title">Controls</div>
+        <div class="btn-row">
+          <button class="btn btn-start" id="btnStart" onclick="apiPost('/api/start', getCoordBody())">Start</button>
+          <button class="btn btn-pause" id="btnPause" onclick="apiPost('/api/pause')" disabled>Pause</button>
+          <button class="btn btn-stop" id="btnStop" onclick="apiPost('/api/stop')" disabled>Stop</button>
         </div>
-        <div id="resumeRow" style="margin-top:10px; display:none">
-          <button class="btn-resume" onclick="resumeMining()" style="width:100%">Resume</button>
+        <div id="resumeRow" style="margin-top:8px;display:none">
+          <button class="btn btn-resume" onclick="apiPost('/api/resume')" style="width:100%">Resume</button>
         </div>
-      </div>
-
-      <div class="section">
-        <h2>Navigation</h2>
-        <div class="buttons">
-          <button class="btn-goto-base" id="btnGotoBase" onclick="gotoBase()">Go to Base</button>
-          <button class="btn-sleep" id="btnSleep" onclick="goToBed()">Sleep</button>
-        </div>
-        <div class="buttons" style="margin-top: 10px;">
-          <button class="btn-stop" id="btnStopTravel" onclick="stopMining()" disabled>Stop Travel</button>
+        <div class="btn-row" style="margin-top:8px">
+          <button class="btn btn-base" id="btnBase" onclick="apiPost('/api/goto-base')">Go to Base</button>
+          <button class="btn btn-sleep" id="btnSleep" onclick="apiPost('/api/sleep')">Sleep</button>
         </div>
       </div>
 
-      <div class="section">
-        <h2>Progress</h2>
-        <div class="stats">
-          <div class="stat">
-            <div class="stat-value" id="minedCount">0</div>
-            <div class="stat-label">Blocks Mined</div>
+      <div class="card">
+        <div class="card-title">Progress</div>
+        <div class="progress-stats">
+          <div class="progress-stat">
+            <div class="progress-value" id="minedCount">0</div>
+            <div class="progress-label">Mined</div>
           </div>
-          <div class="stat">
-            <div class="stat-value" id="totalCount">0</div>
-            <div class="stat-label">Total Target</div>
+          <div class="progress-stat">
+            <div class="progress-value" id="totalCount">0</div>
+            <div class="progress-label">Total</div>
           </div>
         </div>
         <div class="progress-bar">
-          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
         </div>
+        <div class="progress-pct" id="progressPct">0%</div>
       </div>
 
-      <div class="section">
-        <h2>Bot Status</h2>
-        <div class="bot-info">
-          <div>Position: <span id="botPos">-</span></div>
-          <div>Tool: <span id="currentTool">-</span></div>
+      <div class="card">
+        <div class="card-title">Bot Status</div>
+        <div class="bot-info-row">
+          <span class="bot-info-label">Position</span>
+          <span class="bot-info-value" id="botPos">-</span>
+        </div>
+        <div class="bot-info-row">
+          <span class="bot-info-label">Tool</span>
+          <span class="bot-info-value" id="currentTool">Hand</span>
         </div>
         <div class="error-msg" id="errorMsg"></div>
       </div>
 
-      <div class="section">
-        <h2>Inventory (Hotbar)</h2>
+      <div class="card">
+        <div class="card-title">Inventory (Hotbar)</div>
         <div class="hotbar" id="hotbar"></div>
       </div>
-    </div>
+
+      <div class="card">
+        <div class="card-title">Logs</div>
+        <div class="log-filters">
+          <span class="log-filter active" data-level="all" onclick="setLogFilter('all',this)">All</span>
+          <span class="log-filter" data-level="info" onclick="setLogFilter('info',this)">Info</span>
+          <span class="log-filter" data-level="warn" onclick="setLogFilter('warn',this)">Warn</span>
+          <span class="log-filter" data-level="error" onclick="setLogFilter('error',this)">Error</span>
+        </div>
+        <div class="log-viewer" id="logViewer"></div>
+      </div>
+    </main>
   </div>
 
   <script>
-    // Poll status
-    setInterval(async () => {
-      try {
-        const res = await fetch('/api/status');
-        const state = await res.json();
-        updateUI(state);
-      } catch {}
-    }, 500);
+    let ws = null, wsConnected = false, logFilter = 'all', logEntries = [];
+    const MAX_LOG = 200;
 
-    function updateUI(state) {
-      // Status badge
-      const badge = document.getElementById('statusBadge');
-      badge.textContent = state.status;
-      badge.className = `status-badge status-${state.status}`;
+    function connectWS() {
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${proto}//${location.host}`);
+      ws.onopen = () => { wsConnected = true; document.getElementById('wsIndicator').classList.add('connected'); };
+      ws.onclose = () => { wsConnected = false; document.getElementById('wsIndicator').classList.remove('connected'); setTimeout(connectWS, 2000); };
+      ws.onerror = () => ws.close();
+      ws.onmessage = (e) => { try { handleMsg(JSON.parse(e.data)); } catch {} };
+    }
 
-      // Stats
-      document.getElementById('minedCount').textContent = state.minedBlocks;
-      document.getElementById('totalCount').textContent = state.totalBlocks;
-
-      const pct = state.totalBlocks > 0
-        ? Math.round((state.minedBlocks / state.totalBlocks) * 100)
-        : 0;
-      document.getElementById('progressFill').style.width = pct + '%';
-
-      // Bot info
-      if (state.botPosition) {
-        const p = state.botPosition;
-        document.getElementById('botPos').textContent = `${p.x}, ${p.y}, ${p.z}`;
-      }
-      document.getElementById('currentTool').textContent = state.currentTool || 'Hand';
-
-      // Buttons
-      const isMining = state.status === 'mining';
-      const isPaused = state.status === 'paused';
-      const isTraveling = state.status === 'traveling';
-      const isActive = isMining || isPaused || isTraveling;
-
-      document.getElementById('btnStart').disabled = isActive;
-      document.getElementById('btnPause').disabled = !isMining;
-      document.getElementById('btnStop').disabled = !isActive;
-      document.getElementById('resumeRow').style.display = isPaused ? 'block' : 'none';
-
-      document.getElementById('btnGotoBase').disabled = isActive;
-      document.getElementById('btnSleep').disabled = isActive;
-      document.getElementById('btnStopTravel').disabled = !isTraveling;
-
-      // Error
-      const errorEl = document.getElementById('errorMsg');
-      if (state.error) {
-        errorEl.textContent = state.error;
-        errorEl.style.display = 'block';
-      } else {
-        errorEl.style.display = 'none';
+    function handleMsg(msg) {
+      switch (msg.type) {
+        case 'init':
+          updateState(msg.data.state); updatePing(msg.data.ping); updateStats(msg.data.stats);
+          updatePlayers(msg.data.players); updateInventory(msg.data.inventory);
+          if (msg.data.chat) msg.data.chat.forEach(c => addChat(c));
+          if (msg.data.logs) { logEntries = msg.data.logs; renderLogs(); }
+          break;
+        case 'periodic':
+          updateState(msg.data.state); updateStats(msg.data.stats);
+          updatePlayers(msg.data.players); updateInventory(msg.data.inventory);
+          break;
+        case 'state': updateState(msg.data); break;
+        case 'ping': updatePing(msg.data); break;
+        case 'health': updateHealth(msg.data.health, msg.data.food); break;
+        case 'mining:progress': updateProgress(msg.data.mined, msg.data.total); break;
+        case 'chat': addChat(msg.data); break;
+        case 'log': addLogEntry(msg.data); break;
       }
     }
 
-    async function startMining() {
-      const body = {
-        x1: Number(document.getElementById('x1').value),
-        y1: Number(document.getElementById('y1').value),
-        z1: Number(document.getElementById('z1').value),
-        x2: Number(document.getElementById('x2').value),
-        y2: Number(document.getElementById('y2').value),
-        z2: Number(document.getElementById('z2').value),
-      };
-
-      if (Object.values(body).some(v => isNaN(v))) {
-        alert('Enter all coordinates!');
-        return;
+    function updateState(s) {
+      if (!s) return;
+      const b = document.getElementById('statusBadge');
+      b.textContent = s.status; b.className = `status-badge status-${s.status}`;
+      updateProgress(s.minedBlocks, s.totalBlocks);
+      if (s.botPosition) { const p = s.botPosition; document.getElementById('botPos').textContent = `${p.x}, ${p.y}, ${p.z}`; }
+      document.getElementById('currentTool').textContent = s.currentTool || 'Hand';
+      updateHealth(s.health, s.food);
+      if (s.ping !== undefined) {
+        document.getElementById('netPing').textContent = s.ping;
+        document.getElementById('pingValue').textContent = s.ping + 'ms';
+        const q = s.ping < 100 ? 'good' : s.ping < 250 ? 'moderate' : s.ping < 500 ? 'poor' : 'critical';
+        document.getElementById('pingDot').className = `ping-dot ping-${q}`;
       }
-
-      await fetch('/api/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-    }
-
-    async function pauseMining() { await fetch('/api/pause', { method: 'POST' }); }
-    async function resumeMining() { await fetch('/api/resume', { method: 'POST' }); }
-    async function stopMining() { await fetch('/api/stop', { method: 'POST' }); }
-    async function gotoBase() { await fetch('/api/goto-base', { method: 'POST' }); }
-    
-    // Новая функция для сна
-    async function goToBed() { await fetch('/api/sleep', { method: 'POST' }); }
-
-    // --- Area preview ---
-    let previewTimer = null;
-
-    function getCoords() {
-      const vals = ['x1','y1','z1','x2','y2','z2'].map(id => {
-        const v = document.getElementById(id).value;
-        return v === '' ? null : Number(v);
-      });
-      if (vals.some(v => v === null || isNaN(v))) return null;
-      return vals;
-    }
-
-    function schedulePreview() {
-      clearTimeout(previewTimer);
-      previewTimer = setTimeout(sendPreview, 300);
-    }
-
-    async function sendPreview() {
-      const c = getCoords();
-      if (!c) {
-        await fetch('/api/preview/clear', { method: 'POST' });
-        document.getElementById('areaSize').textContent = '';
-        return;
+      if (s.tps !== undefined) {
+        document.getElementById('netTps').textContent = s.tps.toFixed(1);
+        document.getElementById('tpsValue').textContent = s.tps.toFixed(1);
       }
-
-      const [x1,y1,z1,x2,y2,z2] = c;
-      const dx = Math.abs(x2-x1)+1, dy = Math.abs(y2-y1)+1, dz = Math.abs(z2-z1)+1;
-      document.getElementById('areaSize').textContent = `${dx}×${dy}×${dz} = ${(dx*dy*dz).toLocaleString()} blocks`;
-
-      await fetch('/api/preview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ x1, y1, z1, x2, y2, z2 }),
-      });
+      const mining = s.status === 'mining', paused = s.status === 'paused', traveling = s.status === 'traveling';
+      const active = mining || paused || traveling;
+      document.getElementById('btnStart').disabled = active;
+      document.getElementById('btnPause').disabled = !mining;
+      document.getElementById('btnStop').disabled = !active;
+      document.getElementById('resumeRow').style.display = paused ? 'block' : 'none';
+      document.getElementById('btnBase').disabled = active;
+      document.getElementById('btnSleep').disabled = active;
+      const err = document.getElementById('errorMsg');
+      if (s.error) { err.textContent = s.error; err.style.display = 'block'; }
+      else { err.style.display = 'none'; }
     }
 
-    // --- Hotbar ---
-    (function initHotbar() {
-      const hotbar = document.getElementById('hotbar');
-      for (let i = 0; i < 9; i++) {
-        const slot = document.createElement('div');
-        slot.className = 'hotbar-slot';
-        slot.id = `hslot-${i}`;
-        slot.innerHTML =
-          `<span class="hotbar-slot-num">${i + 1}</span>` +
-          `<span class="hotbar-slot-name"></span>` +
-          `<span class="hotbar-slot-count"></span>`;
-        hotbar.appendChild(slot);
-      }
-    })();
-
-    function formatItemName(name) {
-      const parts = name.split('_');
-      if (parts.length === 1) {
-        return name.charAt(0).toUpperCase() + name.slice(1, 6);
-      }
-      return parts.map(p => p.charAt(0).toUpperCase() + p.slice(1, 4)).join('\n');
+    function updateHealth(h, f) {
+      if (h !== undefined) { document.getElementById('healthBar').style.width = `${(h/20)*100}%`; document.getElementById('healthValue').textContent = Math.round(h); }
+      if (f !== undefined) { document.getElementById('foodBar').style.width = `${(f/20)*100}%`; document.getElementById('foodValue').textContent = Math.round(f); }
     }
 
-    setInterval(async () => {
-      try {
-        const res = await fetch('/api/inventory');
-        const { slots, activeSlot } = await res.json();
+    function updatePing(d) {
+      if (!d) return;
+      document.getElementById('netPing').textContent = d.ping;
+      document.getElementById('pingValue').textContent = d.ping + 'ms';
+      document.getElementById('pingDot').className = `ping-dot ping-${d.quality}`;
+      document.getElementById('netTps').textContent = d.tps.toFixed(1);
+      document.getElementById('tpsValue').textContent = d.tps.toFixed(1);
+    }
+
+    function updateProgress(m, t) {
+      document.getElementById('minedCount').textContent = m;
+      document.getElementById('totalCount').textContent = t;
+      const p = t > 0 ? Math.round((m/t)*100) : 0;
+      document.getElementById('progressFill').style.width = p + '%';
+      document.getElementById('progressPct').textContent = p + '%';
+    }
+
+    function updateStats(s) {
+      if (!s) return;
+      document.getElementById('statBpm').textContent = s.blocksPerMinute;
+      document.getElementById('statTotal').textContent = s.totalBlocksMined;
+      const d = s.sessionDuration;
+      const h = Math.floor(d/3600000), m = Math.floor((d%3600000)/60000), sec = Math.floor((d%60000)/1000);
+      document.getElementById('statSession').textContent = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
+      if (s.estimatedTimeRemaining) {
+        const e = s.estimatedTimeRemaining, eh = Math.floor(e/3600000), em = Math.floor((e%3600000)/60000);
+        document.getElementById('statEta').textContent = eh > 0 ? `${eh}h ${em}m` : `${em}m`;
+      } else { document.getElementById('statEta').textContent = '--'; }
+    }
+
+    function updatePlayers(p) {
+      if (!p) return;
+      document.getElementById('playerCount').textContent = p.length;
+      const c = document.getElementById('playerList');
+      if (p.length === 0) { c.innerHTML = '<div class="player-empty">No players</div>'; return; }
+      c.innerHTML = p.map(pl => `<div class="player-item"><span>${esc(pl.name)}</span><span class="player-ping">${pl.ping}ms</span></div>`).join('');
+    }
+
+    function updateInventory(d) {
+      if (!d) return;
+      const hb = document.getElementById('hotbar');
+      if (hb.children.length === 0) {
         for (let i = 0; i < 9; i++) {
-          const slot = document.getElementById(`hslot-${i}`);
-          const item = slots[i];
-          slot.className = 'hotbar-slot' + (i === activeSlot ? ' active' : '');
-          const nameEl = slot.querySelector('.hotbar-slot-name');
-          const countEl = slot.querySelector('.hotbar-slot-count');
-          if (item) {
-            nameEl.textContent = formatItemName(item.name);
-            countEl.textContent = item.count > 1 ? item.count : '';
-          } else {
-            nameEl.textContent = '';
-            countEl.textContent = '';
-          }
+          const s = document.createElement('div'); s.className = 'hotbar-slot'; s.id = `hslot-${i}`;
+          s.innerHTML = `<span class="hotbar-slot-num">${i+1}</span><span class="hotbar-slot-name"></span><span class="hotbar-slot-count"></span>`;
+          hb.appendChild(s);
         }
-      } catch {}
-    }, 500);
+      }
+      for (let i = 0; i < 9; i++) {
+        const s = document.getElementById(`hslot-${i}`), item = d.slots[i];
+        s.className = 'hotbar-slot' + (i === d.activeSlot ? ' active' : '');
+        const n = s.querySelector('.hotbar-slot-name'), c = s.querySelector('.hotbar-slot-count');
+        if (item) { n.textContent = fmtItem(item.name); c.textContent = item.count > 1 ? item.count : ''; }
+        else { n.textContent = ''; c.textContent = ''; }
+      }
+    }
+
+    function addChat(m) {
+      const box = document.getElementById('chatBox'), el = document.createElement('div');
+      el.className = 'chat-msg' + (m.isSystem ? ' system' : '');
+      if (m.isSystem) el.textContent = m.message;
+      else el.innerHTML = `<span class="chat-username">&lt;${esc(m.username)}&gt;</span> ${esc(m.message)}`;
+      box.appendChild(el);
+      if (box.children.length > 100) box.removeChild(box.firstChild);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function sendChat() {
+      const i = document.getElementById('chatInput'), m = i.value.trim();
+      if (!m) return; apiPost('/api/chat', { message: m }); i.value = '';
+    }
+    document.addEventListener('keydown', (e) => { if (e.target.id === 'chatInput' && e.key === 'Enter') sendChat(); });
+
+    function addLogEntry(e) { logEntries.push(e); if (logEntries.length > MAX_LOG) logEntries.shift(); renderLogs(); }
+
+    function renderLogs() {
+      const v = document.getElementById('logViewer');
+      const f = logFilter === 'all' ? logEntries : logEntries.filter(e => e.level === logFilter);
+      v.innerHTML = f.slice(-50).map(e => {
+        const t = new Date(e.timestamp);
+        const ts = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}:${String(t.getSeconds()).padStart(2,'0')}`;
+        return `<div class="log-entry"><span class="log-time">${ts}</span> <span class="log-level-${e.level}">[${e.level.toUpperCase()}]</span> <span class="log-module">${esc(e.module)}</span> ${esc(e.message)}</div>`;
+      }).join('');
+      v.scrollTop = v.scrollHeight;
+    }
+
+    function setLogFilter(l, b) { logFilter = l; document.querySelectorAll('.log-filter').forEach(f => f.classList.remove('active')); b.classList.add('active'); renderLogs(); }
+
+    function updateAreaSize() {
+      const v = ['x1','y1','z1','x2','y2','z2'].map(id => { const val = document.getElementById(id).value; return val === '' ? null : Number(val); });
+      if (v.some(x => x === null || isNaN(x))) { document.getElementById('areaSize').textContent = ''; return; }
+      const [x1,y1,z1,x2,y2,z2] = v;
+      const dx = Math.abs(x2-x1)+1, dy = Math.abs(y2-y1)+1, dz = Math.abs(z2-z1)+1;
+      document.getElementById('areaSize').textContent = `${dx} x ${dy} x ${dz} = ${(dx*dy*dz).toLocaleString()} blocks`;
+    }
+
+    function getCoordBody() {
+      const b = {};
+      ['x1','y1','z1','x2','y2','z2'].forEach(id => { b[id] = Number(document.getElementById(id).value); });
+      if (Object.values(b).some(v => isNaN(v))) { alert('Enter all coordinates!'); return null; }
+      return b;
+    }
+
+    async function apiPost(url, body) {
+      if (body === null) return;
+      try { await fetch(url, { method: 'POST', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined }); } catch {}
+    }
+
+    function fmtItem(n) { const p = n.split('_'); if (p.length === 1) return n.charAt(0).toUpperCase() + n.slice(1, 6); return p.map(x => x.charAt(0).toUpperCase() + x.slice(1, 4)).join('\n'); }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // Fallback polling when WS is down
+    setInterval(async () => { if (wsConnected) return; try { const r = await fetch('/api/status'); updateState(await r.json()); } catch {} }, 2000);
+
+    connectWS();
   </script>
 </body>
 </html>
